@@ -1,0 +1,31 @@
+id,text,label,category,difficulty,split
+1,Shared Mailbox Access - [AWS_ACCESS_KEY] - [EMAIL],Support general,it_ticket_classification,unspecified,test
+2,[TICKET ID] - A Support Ticket was forwarded to your role  -[LOCATION]Wiedereinrichtung auf neuem Handy,Software,it_ticket_classification,unspecified,test
+3,File Share Access - [TICKET ID] - [NAME] ([COMPANY]A. [LOCATION]),Fileservice,it_ticket_classification,unspecified,test
+4,File Share Access - [TICKET ID] - [NAME] ([COMPANY]A. [LOCATION]),Fileservice,it_ticket_classification,unspecified,test
+5,Local admin rights needed for [SERVER],Active Directory,it_ticket_classification,unspecified,test
+6,File Share Access - [TICKET ID] - Knoll. Natali ([COMPANY]. [LOCATION]),Fileservice,it_ticket_classification,unspecified,test
+7,File Share Access - [TICKET ID] - [NAME] ([COMPANY]. [LOCATION]),Fileservice,it_ticket_classification,unspecified,test
+8,[TICKET ID] - New Support Ticket received  - Basis User - [USERNAME] - [NAME] ([COMPANY]. [LOCATION]),Support general,it_ticket_classification,unspecified,test
+9,INstalar a Impresso do adm 2 no meu computador,Computer-Services,it_ticket_classification,unspecified,test
+10,[TICKET ID] - New Support Ticket received  - Instalação software para ponto eletrônico,Software,it_ticket_classification,unspecified,test
+11,File Share Access - [TICKET ID] - [NAME] ([COMPANY]A. [LOCATION]),Fileservice,it_ticket_classification,unspecified,test
+12,File Share Access - [TICKET ID] - [NAME] ([COMPANY]!![COMPANY] Srbija. [LOCATION]),Fileservice,it_ticket_classification,unspecified,test
+13,Synchronisierung Sharepoint funktioniert nicht,Software,it_ticket_classification,unspecified,test
+14,[TICKET ID] - New Support Ticket received  - Acceso a carpeta compartida COMEX,Fileservice,it_ticket_classification,unspecified,test
+15,File Share Access - [TICKET ID] - Defrancq. [NAME] ([COMPANY]. [LOCATION]),Fileservice,it_ticket_classification,unspecified,test
+16,Remove File Share Access - [TICKET ID] - [NAME] ([COMPANY]A. [LOCATION]),Fileservice,it_ticket_classification,unspecified,test
+17,Shared Mailbox Access - [TICKET ID] - [EMAIL],Support general,it_ticket_classification,unspecified,test
+18,File Share Access - [TICKET ID] - [USERNAME] ([COMPANY]. [LOCATION])Service Request: File Share Access     Grant access to file share for the following user:  [USERNAME] ([COMPANY]. [LOCATION]) (Username: [USERNAME])  Access Type: (RO) Read only  File Share:  J:/ZR_MAS     Requestor: [NAME] ([COMPANY]. [LOCATION])  Comment:,Fileservice,it_ticket_classification,unspecified,test
+19,File Share Access - [TICKET ID] - [NAME] ([COMPANY]A. [LOCATION]),Fileservice,it_ticket_classification,unspecified,test
+20,Emails undeliverableEmails sent to [EMAIL] mailto:[EMAIL] are not working.,O365,it_ticket_classification,unspecified,test
+21,Create Shared Mailbox - [EMAIL] - AR-[COMPANY],Support general,it_ticket_classification,unspecified,test
+22,Shared Mailbox Access - [ADDRESS] - [EMAIL],Support general,it_ticket_classification,unspecified,test
+23,[TICKET ID] - New Support Ticket received  - Skype Malfunction,O365,it_ticket_classification,unspecified,test
+24,Acesso pastas e emails Crysmara,Fileservice,it_ticket_classification,unspecified,test
+25,File Share Access - [TICKET ID] - [NAME] ([COMPANY]. [LOCATION])Service Request: File Share Access     Grant access to file share for the following user:  [NAME] ([COMPANY]. [LOCATION]) (Username: [USERNAME])  Access Type: (RO) Read only  File Share:    [SERVER]-[SERVER]-ONLY-RO       Requestor: [NAME] ([COMPANY]. [LOCATION])  Comment:,Fileservice,it_ticket_classification,unspecified,test
+26,[TICKET ID] - A Support Ticket was forwarded to your role  - AW: Order Provisioned: #[TICKET ID] - Install request for [NAME],Support general,it_ticket_classification,unspecified,test
+27,[TICKET ID] - New Support Ticket received  - Work phone does not connect to [COMPANY] wireless network,Support general,it_ticket_classification,unspecified,test
+28,Team-Mailadresse/Kalender in Outlook einbinden[NAME] liebe [NAME].             wir haben für  unsere Teams-Site eine Team-Mailadresse/-Kalender erstellt ([EMAIL]).  Das funktioniert auch in Teams. der Kalender ist dort eingebunden. Nun würden  wir den Kalender/die Inbox auch gern in Outlook einfügen. Im Gegensatz zu dem  Sharepoint-Sammelkalender habe ich es nicht hinbekommen den in Sharepoint zu  öffnen und via „Verbindung mit Outlook erstellen“ in Outlook einzubinden. Wenn  ich den Kalender im Browser öffne werde ich immer zu outlook.office.com  weitergeleitet wo ich den Kalender zwar sehe aber die Funktion zum Einbinden  steht nicht zur Verfügung.             Meine einzige  Idee nach viel Rumklicken ist die Mailadresse manuell in Outlook. wie ein  reguläres Postfach hinzuzufügen. Dafür fehlt mir aber das Passwort. Habt ihr dazu eine Idee?             Vielen Dank und  Viele Grüße             [NAME],O365,it_ticket_classification,unspecified,test
+29,Missing connection to all securitytools on system [SERVER],Software,it_ticket_classification,unspecified,test
+30,Initiated by GIT: Missing connection to AV. Directory and inventory-Vendor on system [SERVER],Software,it_ticket_classification,unspecified,test

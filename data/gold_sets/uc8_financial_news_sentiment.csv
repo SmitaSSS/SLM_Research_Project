@@ -1,0 +1,31 @@
+id,text,label,category,difficulty,split
+1,"The company was supposed to deliver machinery to a veneer mill in the Tomsk region , in Russia .",NEUTRAL,financial_news_sentiment,unspecified,test
+2,UNC Charlotte would also deploy SSH Tectia Connector to enable secure application connectivity .,NEUTRAL,financial_news_sentiment,unspecified,test
+3,"In 2009 , Lee & Man had a combined annual production capacity of close to 4.5 million tonnes of paper and 300,000 tonnes of pulp .",NEUTRAL,financial_news_sentiment,unspecified,test
+4,"`` That 's a very high figure on the European scale , '' Noop said , recalling however that this also includes beer bought by Finnish tourists .",NEUTRAL,financial_news_sentiment,unspecified,test
+5,"In Finland , the corresponding service is Alma Media 's Etuovi.com , Finland 's most popular and best known nationwide online service for home and property sales .",NEUTRAL,financial_news_sentiment,unspecified,test
+6,Construction is scheduled to start in April-June 2007 and to be completed in early 2008 .,NEUTRAL,financial_news_sentiment,unspecified,test
+7,"Finnish-owned contract manufacturer of electronics Elcoteq Hungary Kft has announced plans to recruit more than 650 new staffers to fulfill new orders in P+_cs , where the company has two plants .",POSITIVE,financial_news_sentiment,unspecified,test
+8,"The gross area of the Innova 2 project will be about 10,000 sq m ( 107,600 sq ft ) .",NEUTRAL,financial_news_sentiment,unspecified,test
+9,Finnish home decoration and arts and crafts retailer Tiimari Plc ( OMX Helsinki : TII1V ) reported on Monday ( 18 August ) an operating loss of EUR3 .3 m on net sales of EUR33 .9 m for the period January-June 2008 .,NEUTRAL,financial_news_sentiment,unspecified,test
+10,Deliveries will start in the second half of 2007 and the start-up of the mill is scheduled for 2008 .,NEUTRAL,financial_news_sentiment,unspecified,test
+11,"Steek , which was set up in 2002 , is based in Bordeaux , southwestern France .",NEUTRAL,financial_news_sentiment,unspecified,test
+12,"Outotec said it won new orders worth 492.9 mln eur during the quarter , compared with 240.4 mln eur a year earlier .",POSITIVE,financial_news_sentiment,unspecified,test
+13,"The store is located in Poznan in a shopping center named Pestka , the company added .",NEUTRAL,financial_news_sentiment,unspecified,test
+14,The value of the order is USD 2.2 mn .,NEUTRAL,financial_news_sentiment,unspecified,test
+15,The company expects meat purchases to remain at about 8mn kilos in 2011 .,NEUTRAL,financial_news_sentiment,unspecified,test
+16,Finnish house manufacturers are targeting the strongly growing one-family house market in Russia .,NEUTRAL,financial_news_sentiment,unspecified,test
+17,The deal was worth about EUR 1.2 mn .,NEUTRAL,financial_news_sentiment,unspecified,test
+18,Any investment or investment activity to which this communication relates is only available to relevant persons and will be engaged in only with relevant persons .,NEUTRAL,financial_news_sentiment,unspecified,test
+19,Following the increase the company+EUR TM s capital totals 5.5 mln Romanian lei $ 1.98 mln-1 .56 mln euro .,NEUTRAL,financial_news_sentiment,unspecified,test
+20,"Since the association 's data do not cover sales figures from about 100 small local breweries and sales of imported beer products , the actual market shares of its members are smaller than those given in the report .",NEGATIVE,financial_news_sentiment,unspecified,test
+21,"According to the Latvian business register , Uponor Latvia closed in red with LVL 99,000 EUR 139,538.17 USD 194,556.48 on turnover of LVL 2.346 mn for 2009 .",NEGATIVE,financial_news_sentiment,unspecified,test
+22,The issue came up in connection with discussion with local municipalities concerning the sale of water to industrial facilities .,NEUTRAL,financial_news_sentiment,unspecified,test
+23,Operating profit rose to EUR 13.1 mn from EUR 8.7 mn in the corresponding period in 2007 representing 7.7 % of net sales .,POSITIVE,financial_news_sentiment,unspecified,test
+24,"Its annual capacity is some 10,000 MW .",NEUTRAL,financial_news_sentiment,unspecified,test
+25,"The Finnish company is building a 800,000 mt-year biodiesel plant in Singapore .",NEUTRAL,financial_news_sentiment,unspecified,test
+26,"The long-standing partnership and commitment enable both parties to develop their respective operations , and ESL Shipping will also have the opportunity to update its fleet and improve its efficiency .",POSITIVE,financial_news_sentiment,unspecified,test
+27,"Aldata Solution , a global company engaged in supplier to consumer business process optimization , has announced the details of its Dollars for Dinosaurs program .",NEUTRAL,financial_news_sentiment,unspecified,test
+28,"The reasons behind the estimate include the rise in 2008 rent levels and several fully-leased office and retail properties , which were completed and added to the company 's investment property portfolio .",NEUTRAL,financial_news_sentiment,unspecified,test
+29,Finnish beverage company Olvi is introducing a new long drink Olvi Kultalonkero ( `` golden long drink '' ) in the market in Finland in the spring of 2009 .,NEUTRAL,financial_news_sentiment,unspecified,test
+30,The current reference grade instruments are challenging to operate due to their high price and complexity for routine use .,NEGATIVE,financial_news_sentiment,unspecified,test
