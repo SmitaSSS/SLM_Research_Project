@@ -184,6 +184,10 @@ Eight enterprise use cases spanning all three deployment tiers (S3 uses the defa
 
 **Note on historical scores.** The `build_gold_set_uc[N].py` scripts, their metadata files and some evaluation reports record the S3 scores and thresholds as they stood when each gold set was built (March 2026, earlier weighting and scoring scheme). They are kept unchanged as a historical record. The scores in the table above are the final scores used in the paper, and `scripts/sensitivity_analysis.py` reproduces them.
 
+**Datasets.** See [`DATASETS.md`](DATASETS.md) for the source and location of every dataset used in the S³ paper (the calibration-set sources and the team-authored validation sets). Benchmark outputs for the calibration set are in `data/raw_outputs/newuc*` and `data/results/newuc*`.
+
+**Note on `data/results/newuc5_summary.csv`.** The file contains the LLM rows from earlier attempts as well as the final run. The baseline reported in the paper for UC5 is the final run (46.7%).
+
 ---
 
 ## Project Structure
@@ -595,12 +599,9 @@ Three use cases demonstrate why gate rules are essential beyond the formula:
 - **UC1** (S³=3.00): The formula alone sits exactly at tau_1 (Pure SLM). The Flag Rule (SK=4) sets the minimum tier at Hybrid. Benchmark: best SLM matches the LLM (100% parity).
 - **UC8** (S³=4.00): Hard Rule 2 (TC=5, SK=4) and the formula both give LLM Only, so the gate reinforces an assignment the formula also reaches. Benchmark: 89.7% parity.
 
-### Cross-Framework Validation (S³-SDDF Bridge)
+### S³-SDDF Bridge (exploratory)
 
-S³ (top-down expert scoring) and SDDF (bottom-up empirical routing) were developed independently. The bridge analysis shows:
-
-- **Spearman ρ = -0.73, p = 0.01** — statistically significant negative correlation between S³ score and SDDF SLM capability (computed with the earlier S³ scoring; re-run `scripts/s3_sddf_bridge.py` with the updated scoring before citing this value)
-- As S³ increases (harder tasks), SDDF SLM capability decreases — two independent frameworks converge
+`scripts/s3_sddf_bridge.py` maps S³ dimension scores onto SDDF task families. It is an exploratory script and is not part of the results reported in the S³ paper.
 
 ### Sensitivity Analysis
 
