@@ -7,3 +7,5 @@ data/results/*.csv
 *.xlsx
 Reviews.csv
 phishing_email.csv
+!data/raw_outputs/newuc*.csv
+!data/results/newuc*.csv

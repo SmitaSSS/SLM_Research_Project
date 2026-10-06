@@ -1,0 +1,8 @@
+use_case,model_name,tier,params,accuracy_pct,p50_ms,p95_ms
+uc7,Llama-3.2-3B,SLM,3B,0.0,2341,4477
+uc7,Phi4-Mini,SLM,3.8B,0.0,2449,5047
+uc7,Gemma3-4B,SLM,4B,0.0,2700,8354
+uc7,Qwen2.5-7B,SLM,7B,0.0,3156,9053
+uc7,Mistral-7B,SLM,7B,0.0,3131,9861
+uc7,Llama-3.1-8B,SLM,8B,0.0,3217,9558
+uc7,GPT-OSS-120B,LLM,70B,0.0,537,763
