@@ -33,13 +33,14 @@ REPORT_FILE  = os.path.join(EVAL_DIR, f"s3_sddf_bridge_report_{TIMESTAMP}.txt")
 
 # ── S³ Scoring Engine ──────────────────────────────────────────
 DEFAULT_WEIGHTS = {"TC": 3, "OS": 2, "SK": 4, "DS": 2, "LT": 3, "VL": 1}
-TAU_1, TAU_2 = 3.2, 4.0
+TAU_1, TAU_2 = 3.0, 3.7   # Pure SLM: S3 <= TAU_1; Hybrid: TAU_1 < S3 <= TAU_2; LLM Only: S3 > TAU_2
+REVERSE_SCORED = ("OS", "LT")   # high raw score favours the small model; formula uses 6 - score
 
 
 def compute_s3(scores, weights=None):
     """Compute S³ score using dynamic-denominator WSM."""
     w = weights or DEFAULT_WEIGHTS
-    numerator = sum(scores[d] * w[d] for d in scores)
+    numerator = sum(((6 - scores[d]) if d in REVERSE_SCORED else scores[d]) * w[d] for d in scores)
     denominator = sum(5 * w[d] for d in scores)
     return round(numerator / denominator * 5, 2)
 
@@ -54,12 +55,12 @@ def assign_tier(s3_score, scores):
         return "LLM Only", "Hard Rule 2 (TC=5, SK>=4)"
     # Flag Rule: SK>=4 → minimum Hybrid
     if scores.get("SK", 0) >= 4:
-        tier = "Hybrid" if s3_score < TAU_2 else "LLM Only"
+        tier = "Hybrid" if s3_score <= TAU_2 else "LLM Only"
         return tier, "Flag Rule (SK>=4)"
     # Formula only
-    if s3_score < TAU_1:
+    if s3_score <= TAU_1:
         return "Pure SLM", "Formula"
-    elif s3_score < TAU_2:
+    elif s3_score <= TAU_2:
         return "Hybrid", "Formula"
     else:
         return "LLM Only", "Formula"
@@ -322,7 +323,7 @@ def build_report(bridge_rows, sddf_metrics):
     lines.append("  " + "-" * 66)
     lines.append("  S3 (Top-Down): Expert scores 6 dimensions (TC, OS, SK, DS, LT, VL)")
     lines.append("    → Computes S3 = sum(Score_i * w_i) / sum(5 * w_i) * 5")
-    lines.append("    → Assigns tier: Pure SLM (<3.2), Hybrid (3.2-4.0), LLM Only (>4.0)")
+    lines.append("    → Assigns tier: Pure SLM (<=3.0), Hybrid (3.0-3.7), LLM Only (>3.7)")
     lines.append("")
     lines.append("  SDDF (Bottom-Up): Empirical difficulty scoring + routing evaluation")
     lines.append("    → Models: qwen2.5 (0.5B, 3B, 7B) + Llama-3.3-70B baseline")

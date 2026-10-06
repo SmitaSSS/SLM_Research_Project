@@ -24,27 +24,31 @@ CSV_FILE     = os.path.join(EVAL_DIR, f"sensitivity_matrix_{TIMESTAMP}.csv")
 REPORT_FILE  = os.path.join(EVAL_DIR, f"sensitivity_report_{TIMESTAMP}.txt")
 
 # ── Tier Boundaries ───────────────────────────────────────────
-TAU_1, TAU_2 = 3.2, 4.0
+TAU_1, TAU_2 = 3.0, 3.7   # Pure SLM: S3 <= TAU_1; Hybrid: TAU_1 < S3 <= TAU_2; LLM Only: S3 > TAU_2
 
-# ── S³ Dimension Scores for 8 Use Cases (Paper Table III) ─────
+# OS and LT are reverse-scored (a HIGH raw score favours the small model), so the
+# formula uses 6 - score for these two dimensions. Raw (1-5) scores are stored below.
+REVERSE_SCORED = ("OS", "LT")
+
+# ── S³ raw dimension scores for the 8 use cases (final values used in the paper; OS and LT are reverse-scored in the formula) ─────
 USE_CASES = {
-    "UC1_SMS_Threat":       {"TC": 2, "OS": 5, "SK": 4, "DS": 2, "LT": 4, "VL": 3},
-    "UC2_Invoice_Extract":  {"TC": 3, "OS": 3, "SK": 2, "DS": 2, "LT": 3, "VL": 3},
-    "UC3_Ticket_Routing":   {"TC": 2, "OS": 5, "SK": 2, "DS": 2, "LT": 3, "VL": 3},
-    "UC4_Review_Sentiment": {"TC": 2, "OS": 5, "SK": 1, "DS": 1, "LT": 2, "VL": 3},
-    "UC5_Code_Review":      {"TC": 4, "OS": 5, "SK": 3, "DS": 2, "LT": 3, "VL": 2},
-    "UC6_Clinical_Triage":  {"TC": 4, "OS": 5, "SK": 5, "DS": 4, "LT": 4, "VL": 2},
-    "UC7_Legal_Contract":   {"TC": 3, "OS": 5, "SK": 4, "DS": 3, "LT": 2, "VL": 1},
+    "UC1_SMS_Threat":       {"TC": 2, "OS": 3, "SK": 4, "DS": 3, "LT": 4, "VL": 5},
+    "UC2_Invoice_Extract":  {"TC": 2, "OS": 4, "SK": 2, "DS": 3, "LT": 2, "VL": 4},
+    "UC3_Ticket_Routing":   {"TC": 1, "OS": 4, "SK": 3, "DS": 2, "LT": 3, "VL": 4},
+    "UC4_Review_Sentiment": {"TC": 1, "OS": 3, "SK": 2, "DS": 1, "LT": 3, "VL": 3},
+    "UC5_Code_Review":      {"TC": 4, "OS": 4, "SK": 4, "DS": 2, "LT": 2, "VL": 3},
+    "UC6_Clinical_Triage":  {"TC": 4, "OS": 4, "SK": 5, "DS": 4, "LT": 5, "VL": 1},
+    "UC7_Legal_Contract":   {"TC": 4, "OS": 2, "SK": 3, "DS": 4, "LT": 2, "VL": 2},
     "UC8_Financial_Report": {"TC": 5, "OS": 1, "SK": 4, "DS": 3, "LT": 2, "VL": 1},
 }
 
 # ── Weight Profiles ───────────────────────────────────────────
 WEIGHT_PROFILES = {
     "Default":        {"TC": 3, "OS": 2, "SK": 4, "DS": 2, "LT": 3, "VL": 1},
-    "Security-First": {"TC": 2, "OS": 1, "SK": 5, "DS": 4, "LT": 1, "VL": 1},
-    "Latency-First":  {"TC": 2, "OS": 2, "SK": 2, "DS": 1, "LT": 5, "VL": 3},
+    "Security-First": {"TC": 2, "OS": 1, "SK": 5, "DS": 4, "LT": 2, "VL": 1},
+    "Latency-First":  {"TC": 2, "OS": 2, "SK": 3, "DS": 1, "LT": 5, "VL": 3},
     "Balanced":       {"TC": 3, "OS": 3, "SK": 3, "DS": 3, "LT": 3, "VL": 3},
-    "Volume-Heavy":   {"TC": 2, "OS": 2, "SK": 3, "DS": 2, "LT": 4, "VL": 5},
+    "Volume-Heavy":   {"TC": 2, "OS": 2, "SK": 3, "DS": 2, "LT": 2, "VL": 5},
 }
 
 DIMS = ["TC", "OS", "SK", "DS", "LT", "VL"]
@@ -52,16 +56,16 @@ DIMS = ["TC", "OS", "SK", "DS", "LT", "VL"]
 
 def compute_s3(scores, weights):
     """Compute S³ score using dynamic-denominator WSM."""
-    numerator = sum(scores[d] * weights[d] for d in DIMS)
+    numerator = sum(((6 - scores[d]) if d in REVERSE_SCORED else scores[d]) * weights[d] for d in DIMS)
     denominator = sum(5 * weights[d] for d in DIMS)
     return round(numerator / denominator * 5, 4)
 
 
 def assign_tier_formula(s3_score):
     """Assign tier by formula only (no gate rules)."""
-    if s3_score < TAU_1:
+    if s3_score <= TAU_1:
         return "Pure SLM"
-    elif s3_score < TAU_2:
+    elif s3_score <= TAU_2:
         return "Hybrid"
     else:
         return "LLM Only"
@@ -74,8 +78,13 @@ def assign_tier_with_gates(s3_score, scores):
     if scores.get("TC", 0) == 5 and scores.get("SK", 0) >= 4:
         return "LLM Only"
     if scores.get("SK", 0) >= 4:
-        return "Hybrid" if s3_score < TAU_2 else "LLM Only"
+        return "Hybrid" if s3_score <= TAU_2 else "LLM Only"
     return assign_tier_formula(s3_score)
+
+
+def is_hard_rule_locked(scores):
+    """True when a hard rule (SK=5, or TC=5 with SK>=4) fixes the tier regardless of weights."""
+    return scores.get("SK", 0) == 5 or (scores.get("TC", 0) == 5 and scores.get("SK", 0) >= 4)
 
 
 def compute_triantaphyllou_margin(scores, weights, current_tier):
@@ -114,7 +123,7 @@ def compute_triantaphyllou_margin(scores, weights, current_tier):
                 elif scores.get("TC", 0) == 5 and scores.get("SK", 0) >= 4:
                     new_tier = "LLM Only"
                 elif scores.get("SK", 0) >= 4:
-                    new_tier = "Hybrid" if new_s3 < TAU_2 else "LLM Only"
+                    new_tier = "Hybrid" if new_s3 <= TAU_2 else "LLM Only"
 
                 if new_tier != current_tier:
                     if delta_pct < min_change:
@@ -203,7 +212,7 @@ def build_report(matrix, stability, margins):
     lines.append(f"  {'Profile':<18} {'TC':>4} {'OS':>4} {'SK':>4} {'DS':>4} {'LT':>4} {'VL':>4}  {'Rationale'}")
     lines.append("  " + "-" * 70)
     rationales = {
-        "Default":        "Paper baseline (SMART elicitation)",
+        "Default":        "Paper baseline (default profile)",
         "Security-First": "Regulated industries prioritize SK, DS",
         "Latency-First":  "Real-time apps prioritize LT, VL",
         "Balanced":       "Equal weights — no dimension priority",
@@ -269,8 +278,10 @@ def build_report(matrix, stability, margins):
     for uc_name in USE_CASES:
         m = margins[uc_name]
         if m["min_change_pct"] == float("inf"):
-            change_str = "LOCKED"
-            via_str = "gate rule"
+            if is_hard_rule_locked(USE_CASES[uc_name]):
+                change_str, via_str = "LOCKED", "hard rule"
+            else:
+                change_str, via_str = ">500%", "none found"
             flip_str = "N/A"
         else:
             change_str = f"{m['min_change_pct']}%"
@@ -288,7 +299,10 @@ def build_report(matrix, stability, margins):
     for uc_name in USE_CASES:
         m = margins[uc_name]
         if m["min_change_pct"] == float("inf"):
-            lines.append(f"    {uc_name}: LOCKED by gate rule — weight changes cannot flip tier")
+            if is_hard_rule_locked(USE_CASES[uc_name]):
+                lines.append(f"    {uc_name}: LOCKED by hard rule — weight changes cannot flip tier")
+            else:
+                lines.append(f"    {uc_name}: ROBUST — no single-weight change up to 500% flips the tier")
         elif m["min_change_pct"] >= 100:
             lines.append(f"    {uc_name}: ROBUST — requires >{m['min_change_pct']}% weight change to flip")
         elif m["min_change_pct"] >= 30:
@@ -300,7 +314,7 @@ def build_report(matrix, stability, margins):
     lines.append("")
     lines.append("  BOUNDARY CASE ANALYSIS")
     lines.append("  " + "-" * 60)
-    lines.append("  Use cases near tier boundaries (within 0.3 of tau_1=3.2 or tau_2=4.0):")
+    lines.append("  Use cases near tier boundaries (within 0.3 of tau_1=3.0 or tau_2=3.7):")
     for uc_name in USE_CASES:
         m = margins[uc_name]
         s3 = m["s3"]
@@ -308,19 +322,19 @@ def build_report(matrix, stability, margins):
         dist_tau2 = abs(s3 - TAU_2)
         min_dist = min(dist_tau1, dist_tau2)
         if min_dist < 0.3:
-            nearest = "tau_1 (3.2)" if dist_tau1 < dist_tau2 else "tau_2 (4.0)"
+            nearest = "tau_1 (3.0)" if dist_tau1 < dist_tau2 else "tau_2 (3.7)"
             lines.append(f"    {uc_name}: S3={s3:.2f}, distance to {nearest} = {min_dist:.2f}")
 
     # ── Summary ───────────────────────────────────────────────
     lines.append("")
     lines.append("  SUMMARY")
     lines.append("  " + "-" * 60)
-    locked = sum(1 for m in margins.values() if m["min_change_pct"] == float("inf"))
-    robust = sum(1 for m in margins.values() if m["min_change_pct"] >= 100 and m["min_change_pct"] != float("inf"))
+    locked = sum(1 for uc, m in margins.items() if m["min_change_pct"] == float("inf") and is_hard_rule_locked(USE_CASES[uc]))
+    robust = sum(1 for uc, m in margins.items() if m["min_change_pct"] >= 100 and not (m["min_change_pct"] == float("inf") and is_hard_rule_locked(USE_CASES[uc])))
     stable = sum(1 for m in margins.values() if 30 <= m["min_change_pct"] < 100)
     sensitive = sum(1 for m in margins.values() if m["min_change_pct"] < 30)
 
-    lines.append(f"  Gate-rule locked (cannot flip):  {locked}/8")
+    lines.append(f"  Hard-rule locked (cannot flip):  {locked}/8")
     lines.append(f"  Robust (>100% change needed):    {robust}/8")
     lines.append(f"  Stable (30-100% change needed):  {stable}/8")
     lines.append(f"  Sensitive (<30% change needed):   {sensitive}/8")
@@ -331,7 +345,7 @@ def build_report(matrix, stability, margins):
         lines.append("  CONCLUSION: All tier assignments are robust or locked.")
         lines.append("  The S3 scoring framework produces stable deployment recommendations")
         lines.append("  even under substantial weight variations. This supports the argument")
-        lines.append("  that the geometric thresholds (3.2, 4.0) are adequate for N<50.")
+        lines.append("  that the geometric thresholds (3.0, 3.7) are adequate for N<50.")
     else:
         sensitive_ucs = [uc for uc, m in margins.items() if m["min_change_pct"] < 30]
         lines.append(f"  CAUTION: {sensitive} UC(s) are sensitive to weight changes:")

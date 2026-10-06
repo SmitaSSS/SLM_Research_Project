@@ -2,7 +2,7 @@
 
 **Suitability Score for SLM Selection (S3) and SDDF Runtime Routing**
 
-A complete two-stage deployment decision architecture for enterprise Small Language Model (SLM) systems. This project benchmarks SLMs (3B-8B parameters) against LLMs (70B) across eight pre-registered enterprise use cases to validate whether task type — not model scale — governs SLM deployment suitability.
+A complete two-stage deployment decision architecture for enterprise Small Language Model (SLM) systems. This project benchmarks SLMs (3B-8B parameters) against LLMs (70B) across eight enterprise use cases to validate whether task type — not model scale — governs SLM deployment suitability.
 
 > **Paper**: *Decision Framework and Industrial Deployment Protocol for Small Language Models in Agentic AI Systems*
 > **Authors**: Smitha Rajappa, Riddhima Ramasahayam Reddy, Rohit Savant, Yashraj Saxena, Smita Sengupta 
@@ -65,7 +65,7 @@ S3 = [ Sum(Score_i * w_i) ] / [ Sum(5 * w_i) ] * 5
 ```
 
 Where:
-- `Score_i` is the raw score (1-5) assigned to dimension `i`
+- `Score_i` is the polarity-adjusted score (1-5) for dimension `i`: the raw score for TC, SK, DS and VL, and `6 - raw` for OS and LT (see Scoring Dimensions)
 - `w_i` is the organisational weight (integer 1-5) for dimension `i`
 - `Sum(5 * w_i)` is the dynamic denominator (the exact maximum possible weighted sum)
 
@@ -78,7 +78,7 @@ This enables **threshold portability** across organisations with different risk 
 
 ### Scoring Dimensions
 
-Each task is scored on six dimensions. Score 1 = SLM optimal; Score 5 = LLM likely required.
+Each task is scored on six dimensions. Score 1 = SLM optimal; Score 5 = LLM likely required, with one exception: **Output Structure (OS) and Latency Tolerance (LT) are reverse-scored.** Their anchors are written so that a *high* raw score (rigid output format, strict response-time requirement) is more easily satisfied by a small model, so the formula uses `6 - score` for these two dimensions. Raw 1-5 scores are what you record; the inversion is applied inside the scoring code.
 
 | Dimension | Score 1 | Score 2 | Score 3 | Score 4 | Score 5 | What It Measures |
 |-----------|---------|---------|---------|---------|---------|------------------|
@@ -93,7 +93,7 @@ Each task is scored on six dimensions. Score 1 = SLM optimal; Score 5 = LLM like
 
 ### Weight Assignment
 
-Weights are integers 1-5, assigned via SMART direct-rating (Edwards and Barron, 1994). Each weight reflects how much that dimension influences deployment tier decisions in your organisation.
+Weights are integers 1-5, developed through structured expert elicitation informed by Analytic Hierarchy Process principles (Saaty, 1980), without a formal pairwise comparison matrix or consistency ratio. Domain experts compared the relative importance of each dimension pair and the judgments were translated into the 1-5 integer scale. Edwards and Barron (1994) is cited in the paper for the robustness of simple rating approaches to weight imprecision, not as the elicitation method. Each weight reflects how much that dimension influences deployment tier decisions in your organisation.
 
 | Weight | Label | Meaning |
 |--------|-------|---------|
@@ -118,12 +118,14 @@ Dynamic denominator = 5 x (3 + 2 + 4 + 2 + 3 + 1) = **75**
 S3 maps to three deployment tiers:
 
 ```
-S3 <= 3.2          -->  Pure SLM     (SLM handles task autonomously)
-3.2 < S3 <= 4.0    -->  Hybrid       (SLM primary + LLM fallback)
-S3 > 4.0           -->  LLM Only     (LLM required for quality/safety)
+S3 <= 3.0          -->  Pure SLM     (SLM handles task autonomously)
+3.0 < S3 <= 3.7    -->  Hybrid       (SLM primary + LLM fallback)
+S3 > 3.7           -->  LLM Only     (LLM required for quality/safety)
 ```
 
-These thresholds are initialised from scoring scale geometry (55th and 75th percentiles of [1,5]) and validated for internal stability via sensitivity analysis. They are **provisional** — full empirical calibration via UTADIS linear programming is planned at N >= 50 confirmed deployment outcomes.
+The thresholds (tau_1 = 3.0, tau_2 = 3.7) were calibrated on an independent calibration set of eight use cases (`data/gold_sets/`, new use cases; Table 12 of the paper) and then applied to the eight original use cases as held-out validation. They are **provisional** — full empirical calibration via UTADIS linear programming is planned at N >= 50 confirmed deployment outcomes.
+
+**Decision sequence.** Gate rules are evaluated first. Hard Rule 1 and Hard Rule 2 assign LLM Only directly. The Flag Rule (SK >= 4) sets a minimum tier of Hybrid but does not lower a higher tier. If no hard rule applies, the S3 score is mapped to a tier with the boundaries above (a score exactly equal to a threshold falls in the lower tier).
 
 ### Pre-Screening Gate
 
@@ -142,44 +144,45 @@ Before computing S3, a non-compensatory gate is applied. This prevents the weigh
 
 **UC4 — Product Review Sentiment** vs **UC1 — SMS Threat Detection**
 
-Both use the same weight profile. The only major difference is Stakes (1 vs 4):
+Both use the same default weight profile. Scores below are polarity-adjusted (OS and LT already converted with `6 - raw`; UC4 raw OS=3, LT=3; UC1 raw OS=3, LT=4):
 
 | Dimension | UC4 Score | UC1 Score | Weight | UC4 Score x Weight | UC1 Score x Weight |
 |-----------|-----------|-----------|--------|--------------------|--------------------|
 | TC | 1 | 2 | 3 | 3 | 6 |
-| OS | 3 | 3 | 2 | 6 | 6 |
-| SK | 1 | 4 | 4 | 4 | 16 |
-| DS | 1 | 2 | 2 | 2 | 4 |
-| LT | 3 | 2 | 3 | 9 | 6 |
-| VL | 3 | 1 | 1 | 3 | 1 |
-| **Sum** | | | | **27** | **39** |
+| OS (adj.) | 3 | 3 | 2 | 6 | 6 |
+| SK | 2 | 4 | 4 | 8 | 16 |
+| DS | 1 | 3 | 2 | 2 | 6 |
+| LT (adj.) | 3 | 2 | 3 | 9 | 6 |
+| VL | 3 | 5 | 1 | 3 | 5 |
+| **Sum** | | | | **31** | **45** |
 
 ```
-UC4: S3 = 27/75 x 5 = 1.80  -->  Pure SLM (confirmed: 100% parity)
-UC1: S3 = 39/75 x 5 = 2.60  -->  Formula says Pure SLM, but SK=4 triggers
-                                   Flag Rule --> Hybrid (confirmed: Mistral-7B
-                                   100% threat recall, but LLM fallback needed
-                                   for edge cases)
+UC4: S3 = 31/75 x 5 = 2.07  -->  Pure SLM (benchmark: best SLM 97.7% of LLM accuracy)
+UC1: S3 = 45/75 x 5 = 3.00  -->  Formula alone sits exactly at tau_1 (Pure SLM),
+                                   but SK=4 triggers the Flag Rule --> Hybrid
+                                   (benchmark: best SLM matches the LLM at 90.0%)
 ```
 
-The 12-point numerator difference comes **entirely from Stakes**. This demonstrates why Stakes carries the highest weight and why the Flag Rule exists.
+The 14-point numerator difference comes mostly from Stakes (+8). UC1's tier is set by the Flag Rule, which is why Stakes carries the highest weight and why the Flag Rule exists.
 
 ---
 
 ## Use Cases
 
-Eight pre-registered enterprise use cases spanning all three deployment tiers:
+Eight enterprise use cases spanning all three deployment tiers (S3 uses the default weight profile and polarity-adjusted scores; see Scoring Dimensions):
 
 | UC | Domain | Task Type | S³ Score | Predicted Tier | Gate Rule | Status |
 |----|--------|-----------|----------|----------------|-----------|--------|
-| UC1 | SMS Threat Detection | Binary classification | 3.40 | Hybrid | SK=4 Flag Rule | Confirmed |
-| UC2 | Invoice Field Extraction | Structured JSON extraction | 2.60 | Pure SLM | None | Confirmed |
-| UC3 | Support Ticket Routing | 6-way classification | 2.67 | Pure SLM | None | Confirmed |
+| UC1 | SMS Threat Detection | Binary classification | 3.00 | Hybrid | Flag Rule (SK=4): formula alone gives Pure SLM | Confirmed |
+| UC2 | Invoice Field Extraction | Structured JSON extraction | 2.67 | Pure SLM | None | Confirmed |
+| UC3 | Support Ticket Routing | 6-way classification | 2.40 | Pure SLM | None | Confirmed |
 | UC4 | Product Review Sentiment | 3-way classification | 2.07 | Pure SLM | None | Confirmed |
-| UC5 | Automated Code Review | 5-way classification | 3.27 | Hybrid | None (formula only) | Confirmed |
-| UC6 | Healthcare Clinical Triage | 4-way classification | 4.27 | LLM Only | SK=5 Hard Rule 1 | Confirmed |
-| UC7 | Legal Contract Analysis | 4-way risk classification | 3.20 | Hybrid | SK=4 Flag Rule | Confirmed |
-| UC8 | Financial Report Drafting | Free-form generation | 3.07 | LLM Only | TC=5,SK=4 Hard Rule 2 | Confirmed |
+| UC5 | Automated Code Review | 5-way classification | 3.40 | Hybrid | None binding (SK=4 Flag floor already satisfied) | Confirmed |
+| UC6 | Healthcare Clinical Triage | 4-way classification | 3.20 | LLM Only | SK=5 Hard Rule 1 | Confirmed |
+| UC7 | Legal Contract Analysis | 4-way risk classification | 3.60 | Hybrid | None (SK=3) | Confirmed |
+| UC8 | Financial Report Drafting | Free-form generation | 4.00 | LLM Only | TC=5, SK=4 Hard Rule 2 (formula also gives LLM Only) | Confirmed |
+
+**Note on historical scores.** The `build_gold_set_uc[N].py` scripts, their metadata files and some evaluation reports record the S3 scores and thresholds as they stood when each gold set was built (March 2026, earlier weighting and scoring scheme). They are kept unchanged as a historical record. The scores in the table above are the final scores used in the paper, and `scripts/sensitivity_analysis.py` reproduces them.
 
 ---
 
@@ -203,7 +206,7 @@ SLM_Research_Project/
 |   |-- capture_hardware.py        # Hardware spec capture
 |
 |-- data/
-|   |-- gold_sets/                 # Pre-registered test sets (CSV + metadata JSON)
+|   |-- gold_sets/                 # Gold test sets (CSV + metadata JSON)
 |   |   |-- uc[N]_*.csv            # 100-item gold sets
 |   |   |-- uc[N]_metadata.json    # S3 scores, hypotheses, dimensions
 |   |-- raw_outputs/               # Raw inference results per benchmark run
@@ -437,7 +440,7 @@ python3 scripts/verify_apis.py
 
 ### Step 2: Build Gold Sets
 
-Gold sets are pre-registered test datasets. They only need to be built once:
+Gold sets are fixed test datasets. They only need to be built once:
 
 ```bash
 # Build all gold sets (creates CSV + metadata JSON files)
@@ -504,7 +507,7 @@ Each evaluation script:
 1. Loads the most recent raw results file
 2. Computes per-model metrics (accuracy, F1, precision, recall, latency percentiles)
 3. Computes per-difficulty and per-category breakdowns
-4. Validates pre-registered hypotheses
+4. Checks the hypotheses recorded in each use case's metadata
 5. Generates evaluation report (TXT) and metrics (CSV)
 
 **Output files**:
@@ -536,7 +539,7 @@ Each evaluation script:
 
 ## Inference Configuration
 
-All parameters are **locked** as of 2 March 2026 (pre-registration date):
+All parameters are **locked** as of 2 March 2026:
 
 ```json
 {
@@ -560,7 +563,7 @@ All parameters are **locked** as of 2 March 2026 (pre-registration date):
 | Test items | 30 per UC | From 100-item gold set (70 train / 30 test) |
 | Total inferences | 630 per UC | 7 models x 30 items x 3 runs |
 
-**Acceptance criteria** (pre-registered):
+**Acceptance criteria** (defined in the use-case metadata):
 - Accuracy >= 95% of LLM baseline on valid outputs
 - P95 latency <= task-specific SLA
 - Valid output rate >= 95%
@@ -573,14 +576,14 @@ All parameters are **locked** as of 2 March 2026 (pre-registration date):
 
 | UC | S³ Score | Predicted | Gate Rule | Best SLM | LLM Baseline | Parity | Confirmed? |
 |----|----------|-----------|-----------|----------|-------------|--------|-----------|
-| UC4 | 2.07 | Pure SLM | Pass | Mistral-7B: 95.5% | 96.7% | 98.8% | Yes |
-| UC2 | 2.60 | Pure SLM | Pass | Phi4-Mini: 92.2% | 91.1% | 101.2% | Yes |
-| UC3 | 2.67 | Pure SLM | Pass | Multiple: 86.7% | 83.3% | 104.1% | Yes |
-| UC7 | 3.20 | Hybrid | Flag (SK=4) | Qwen2.5-7B: 53.3% | 57.8% | 92.2% | Yes |
-| UC5 | 3.27 | Hybrid | Pass | Llama-3.1-8B: 46.7% | 61.1% | 76.4% | Yes |
-| UC1 | 3.40 | Hybrid | Flag (SK=4) | Mistral-7B: 90.0% | 90.0% | 100% | Yes |
-| UC8 | 3.07 | LLM Only | Hard Rule 2 | Llama-3.2-3B: 72.3% | 80.6% | 89.7% | Yes |
-| UC6 | 4.27 | LLM Only | Hard Rule 1 | Llama-3.1-8B: 73.3% | 68.9% | 106.4%* | Yes |
+| UC4 | 2.07 | Pure SLM | None | Mistral-7B: 94.4% | 96.7% | 97.7% | Yes |
+| UC3 | 2.40 | Pure SLM | None | Multiple: 86.7% | 83.3% | 104.1% | Yes |
+| UC2 | 2.67 | Pure SLM | None | Phi4-Mini: 92.2% | 91.1% | 101.2% | Yes |
+| UC1 | 3.00 | Hybrid | Flag (SK=4) | Mistral-7B: 90.0% | 90.0% | 100% | Yes |
+| UC6 | 3.20 | LLM Only | Hard Rule 1 | Llama-3.1-8B: 73.3% | 68.9% | 106.4%* | Yes |
+| UC5 | 3.40 | Hybrid | Flag floor not binding | Llama-3.1-8B: 46.7% | 61.1% | 76.4% | Yes |
+| UC7 | 3.60 | Hybrid | None | Qwen2.5-7B: 53.3% | 57.8% | 92.3% | Yes |
+| UC8 | 4.00 | LLM Only | Hard Rule 2 | Llama-3.2-3B: 72.3% | 80.6% | 89.7% | Yes |
 
 *UC6 parity of 106.4% masks URGENT class recall failure (SLM 0-64% vs LLM 82%)
 
@@ -588,15 +591,15 @@ All parameters are **locked** as of 2 March 2026 (pre-registration date):
 
 Three use cases demonstrate why gate rules are essential beyond the formula:
 
-- **UC8** (S³=3.07): Formula says Pure SLM, but Hard Rule 2 (TC=5, SK=4) correctly escalates to LLM Only. Benchmark confirms at 89.7% parity.
-- **UC7** (S³=3.20): Sits exactly on the τ₁ boundary. Flag Rule (SK=4) locks Hybrid. Benchmark validates at 92.2% parity.
-- **UC6** (S³=4.27): Hard Rule 1 (SK=5) fires immediately. Overall accuracy masks dangerous URGENT under-triage by SLMs.
+- **UC6** (S³=3.20): The formula alone gives Hybrid. Hard Rule 1 (SK=5) escalates to LLM Only. Overall accuracy masks dangerous URGENT under-triage by SLMs.
+- **UC1** (S³=3.00): The formula alone sits exactly at tau_1 (Pure SLM). The Flag Rule (SK=4) sets the minimum tier at Hybrid. Benchmark: best SLM matches the LLM (100% parity).
+- **UC8** (S³=4.00): Hard Rule 2 (TC=5, SK=4) and the formula both give LLM Only, so the gate reinforces an assignment the formula also reaches. Benchmark: 89.7% parity.
 
 ### Cross-Framework Validation (S³-SDDF Bridge)
 
 S³ (top-down expert scoring) and SDDF (bottom-up empirical routing) were developed independently. The bridge analysis shows:
 
-- **Spearman ρ = -0.73, p = 0.01** — statistically significant negative correlation between S³ score and SDDF SLM capability
+- **Spearman ρ = -0.73, p = 0.01** — statistically significant negative correlation between S³ score and SDDF SLM capability (computed with the earlier S³ scoring; re-run `scripts/s3_sddf_bridge.py` with the updated scoring before citing this value)
 - As S³ increases (harder tasks), SDDF SLM capability decreases — two independent frameworks converge
 
 ### Sensitivity Analysis
@@ -604,12 +607,13 @@ S³ (top-down expert scoring) and SDDF (bottom-up empirical routing) were develo
 Five weight profiles (Default, Security-First, Latency-First, Balanced, Volume-Heavy) tested across all 8 UCs:
 
 - **7/8 profile-stable** — same tier under all 5 profiles
-- **4/8 gate-rule locked** — cannot flip regardless of weight changes
-- **Only UC5 is sensitive** — 28% weight change could flip tier (Triantaphyllou margin)
+- **2/8 hard-rule locked** (UC6, UC8) — cannot flip regardless of weight changes
+- **UC2 is the only profile-sensitive case** — it moves from Pure SLM to Hybrid under the Latency-First profile (a conservative shift)
+- Profiles are those in Table 2 of the paper; run `python scripts/sensitivity_analysis.py` to reproduce
 
 ### Cross-Task Finding
 
-**Task type dominates model scale**: Llama-3.2-3B achieves 93.3% on UC4 (S³=2.07) and 56.7% on UC1 (S³=3.40) — a 36.6pp swing from the same model, same hardware, same prompt structure. The 70B LLM moves only 6.7pp across the same two tasks. S³ score predicts this variance before any inference is run.
+**Task type dominates model scale**: Llama-3.2-3B achieves 93.3% on UC4 (S³=2.07) and 56.7% on UC1 (S³=3.00) — a 36.6pp swing from the same model, same hardware, same prompt structure. The 70B LLM moves only 6.7pp across the same two tasks. The S³ scores are assigned from task properties, not from model outputs.
 
 ---
 
@@ -638,7 +642,7 @@ UC1-UC6 benchmarks completed without Groq failures.
 
 ### Threshold Calibration
 
-Tier boundaries (3.2 and 4.0) are geometrically initialised and validated for internal stability with N=8 confirmed cases. Sensitivity analysis across 5 weight profiles shows 7/8 UCs are profile-stable. Full empirical calibration via UTADIS linear programming requires N >= 50 confirmed deployment outcomes. See paper Section 9 for details.
+Tier boundaries (3.0 and 3.7) were calibrated on an independent eight-use-case calibration set and validated on the eight original use cases. Sensitivity analysis across 5 weight profiles shows 7/8 UCs are profile-stable. Full empirical calibration via UTADIS linear programming requires N >= 50 confirmed deployment outcomes. See paper Section 9 for details.
 
 ### Dimensional Independence
 
